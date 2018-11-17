@@ -1,0 +1,29 @@
+#!/usr/bin/env python
+
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
+import argparse
+import os
+
+from generator.main import main
+
+
+def check_file_path(path):
+    return os.path.exists(path)
+
+
+parser = argparse.ArgumentParser()
+
+parser.add_argument('--file',    '-f',   help='Path to file')
+parser.add_argument('--package', '-pkg', help='Path to package')
+parser.add_argument('--project', '-p',   help='debug flag')
+
+args = parser.parse_args()
+
+if args.file is not None:
+    print(check_file_path(args.file))
+elif args.package is not None:
+    print(check_file_path(args.package))
+elif args.project is not None:
+    print(check_file_path(args.project))
