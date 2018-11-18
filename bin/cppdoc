@@ -1,95 +1,8 @@
 #!/usr/bin/env python3
 
-from enum import Enum
-
 import argparse
-import os
-import string
 
-
-def is_class(lexeme):
-    return lexeme == 'class'
-
-
-class CppClass:
-    def __init__(self, name, file, row):
-        self.name = name
-        self.file = file
-        self.row = row
-        # self.methods = []
-        # self.mentions = []
-        # self.comment = ''
-
-    def print(self):
-        print(
-            "File " + self.file + "\n",
-            "Name " + self.name + "\n",
-            "Row " + str(self.row) + "\n",
-        )
-
-
-class Color(Enum):
-    FILE = 1
-    MODULE = 2
-    PROJECT = 3
-
-
-class DocGenerator:
-    def get_file_content(self):
-        file = open(self.path, 'r')
-        content = file.read()
-        file.close()
-
-        return content
-
-    def generate(self):
-        self.process_file()
-        self.create_dir()
-
-    def create_dir(self):
-        if not os.path.exists(self.output):
-            os.makedirs(self.output)
-
-    def process_file(self):
-        content = self.get_file_content()
-        lines = content.split('\n')
-
-        cpp_classes = []
-
-        for i, line in enumerate(lines):
-            line = line.strip()
-            lexemes = line.split()
-
-            for j, lexeme in enumerate(lexemes):
-                if is_class(lexeme):
-                    name = lexemes[j+1]
-
-                    if name[-1] == '{' or name[-1] == ';':
-                        name = name[:-1]
-
-                    after_lexeme = " ".join(lexemes[j+1:])
-
-                    cpp_class = CppClass(name, self.path, i)
-                    cpp_classes.append(cpp_class)
-                    cpp_class.print()
-
-                    for ch in after_lexeme:
-                        if ch == '{':
-                            print('Class Body found.')
-                            break
-                        elif ch == ';':
-                            print('Class declaration found.')
-                            break
-
-    def __init__(self, path, output):
-        self.path = path
-        self.output = output
-
-        # Logic.
-        self.classes = []
-        self.function = []
-        self.modules = []
-
+from docgen import DocumentGenerator
 
 parser = argparse.ArgumentParser()
 
@@ -101,5 +14,5 @@ parser.add_argument('--output',  '-o', help='Output result.')
 args = parser.parse_args()
 
 if args.file is not None:
-    generator = DocGenerator(args.file, args.output)
+    generator = DocumentGenerator(args.file, args.output)
     generator.generate()
