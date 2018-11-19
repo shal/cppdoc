@@ -32,7 +32,7 @@ class DocumentGenerator:
             output = self.output + "/" + cpp_class.name + ".html"
 
             context = {
-                "name": cpp_class.name,
+                "class": cpp_class
             }
 
             template = j2_env.get_template('class.html')
@@ -45,22 +45,20 @@ class DocumentGenerator:
         content = self.get_file_content()
         lines = content.split('\n')
 
-        for i, line in enumerate(lines):
+        for row, line in enumerate(lines):
             line = line.strip()
             lexemes = line.split()
 
-            for j, lexeme in enumerate(lexemes):
+            for col, lexeme in enumerate(lexemes):
                 if cpp.is_class(lexeme):
-                    name = lexemes[j+1]
+                    name = lexemes[col+1]
 
                     if name[-1] == '{' or name[-1] == ';':
                         name = name[:-1]
 
-                    after_lexeme = " ".join(lexemes[j+1:])
-
-                    cpp_class = cpp.Class(name, self.path, i)
-                    self.classes.append(cpp_class)
-                    print(cpp_class)
+                    after_lexeme = " ".join(lexemes[col+1:])
+                    next_lines = "\n".join(lines[row+1:])
+                    after_lexeme += "\n" + next_lines
 
                     # After class lexeme there are 3 possible cases.
                     # 1. { - class implementation.
@@ -68,13 +66,18 @@ class DocumentGenerator:
                     # 3. nothing - we should go to process next line.
 
                     # Case 1,2
-                    for ch in after_lexeme:
+                    for i, ch in enumerate(after_lexeme):
                         if ch == '{':
-                            print('Class Body found.')
+                            class_body = cpp.find_body(after_lexeme[i:])
+                            cpp_class = cpp.Class(name, self.path, row, class_body)
+                            # print(class_body)
                             break
-                        elif ch == ';':
-                            print('Class declaration found.')
+                        elif ch == '>' or ch == ';':
+                            cpp_class = cpp.Class(name, self.path, row)
                             break
+
+                    # print(cpp_class)
+                    self.classes.append(cpp_class)
 
     def __init__(self, path, output):
         self.path = path
@@ -84,4 +87,6 @@ class DocumentGenerator:
         self.classes = []
         self.function = []
         self.modules = []
+
+
 

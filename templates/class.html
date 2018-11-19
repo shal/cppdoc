@@ -17,13 +17,19 @@
       <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
   </head>
   <body>
-    <p>Class <strong>{{ name }}</strong></p>
-    <p>{{ description }}</p>
+    <p>Class <strong>{{ class.name }}</strong></p>
+    <p>{{ class.description }}</p>
     <br>
     <strong>Methods</strong>
 
-    {% for method in methods %}
+     <div>
+        {{ class.body }}
+    </div>
+
+    {% for method in class.methods %}
     <span>{{ method.name }}</span>
     {% endfor -%}
+
+
   </body>
 </html>

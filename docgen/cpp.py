@@ -11,10 +11,11 @@ class Function:
 
 
 class Class:
-    def __init__(self, name, file, row):
+    def __init__(self, name, file, row, body=None):
         self.name = name
         self.file = file
         self.row = row
+        self.body = body
 
     def __str__(self):
         return "File " + self.file + "\nName " + self.name + "\nRow " + str(self.row) + "\n"
@@ -22,3 +23,18 @@ class Class:
 
 def is_class(lexeme):
     return lexeme == "class"
+
+
+def find_body(snippet):
+    stack = []
+    body = ""
+    for ch in snippet:
+        body += ch
+        if ch == "{":
+            stack.append(ch)
+        elif ch == "}" and stack[-1] == '{':
+            stack.pop()
+            if len(stack) == 0:
+                return body
+
+    return ValueError("Snippet doesn't exit class body.")
