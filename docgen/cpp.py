@@ -16,12 +16,9 @@ class Class:
         self.file = file
         self.row = row
 
-    def print(self):
-        print(
-            "File " + self.file + "\n",
-            "Name " + self.name + "\n",
-            "Row " + str(self.row) + "\n"
-        )
+    def __str__(self):
+        return "File " + self.file + "\nName " + self.name + "\nRow " + str(self.row) + "\n"
+
 
 def is_class(lexeme):
-    return lexeme == 'class'
+    return lexeme == "class"

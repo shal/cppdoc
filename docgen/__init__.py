@@ -11,9 +11,8 @@ j2_env = Environment(
 
 class DocumentGenerator:
     def get_file_content(self):
-        file = open(self.path, 'r')
-        content = file.read()
-        file.close()
+        with open(self.path, 'r') as file:
+            content = file.read()
 
         return content
 
@@ -25,15 +24,18 @@ class DocumentGenerator:
         if not os.path.exists(self.output):
             os.makedirs(self.output)
 
+        index_html = j2_env.get_template('main.html').render(classes=self.classes)
+        with open(self.output + "/index.html", 'w') as f:
+            f.write(index_html)
+
         for cpp_class in self.classes:
             output = self.output + "/" + cpp_class.name + ".html"
 
             context = {
                 "name": cpp_class.name,
-                # "description": cpp_class.description
             }
 
-            template = j2_env.get_template('class.j2')
+            template = j2_env.get_template('class.html')
             result = template.render(context)
 
             with open(output, 'w') as f:
@@ -58,8 +60,14 @@ class DocumentGenerator:
 
                     cpp_class = cpp.Class(name, self.path, i)
                     self.classes.append(cpp_class)
-                    cpp_class.print()
+                    print(cpp_class)
 
+                    # After class lexeme there are 3 possible cases.
+                    # 1. { - class implementation.
+                    # 2. ; -  class declaration.
+                    # 3. nothing - we should go to process next line.
+
+                    # Case 1,2
                     for ch in after_lexeme:
                         if ch == '{':
                             print('Class Body found.')
