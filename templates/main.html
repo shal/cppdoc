@@ -1,36 +1,79 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-      <meta charset="utf-8">
-      <title>Main</title>
 
-      <!-- Latest compiled CSS -->
-      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+<head>
+    <meta charset="utf-8">
+    <title>Main</title>
 
-      <!-- jQuery library -->
-      <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <!-- Latest compiled CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
 
-      <!-- Popper JS -->
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+    <!-- jQuery library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 
-      <!-- Latest compiled JavaScript -->
-      <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
-  </head>
-  <body>
-  <div class="container">
-      <h1>CppDoc</h1>
-      <h3>Classes</h3>
-      {% for class in classes %}
-          <div class="card mb-3">
-              <div class="card-body text-dark">
-                  <h5 class="card-title">
-                      Class <a href="./{{ class.name }}.html" class="font-italic">{{ class.name }}</a>
-                  </h5>
-                  <span class="card-text">{{ class.description }}</span>
-              </div>
-              <!--<p class="card-text"><small class="text-muted">Last updated 3 mins ago</small></p>-->
-          </div>
-      {% endfor %}
-  </div>
-  </body>
+    <!-- Popper JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+
+    <!-- Latest compiled JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <h1>CppDoc</h1>
+        <h3>Classes</h3>
+        {% for class in classes %}
+        <div class="card mb-3">
+            <div class="card-header">
+                <code>
+                    {% if class.is_enum %}
+                    <span>Enum</span>
+                    {% endif %}
+                    <span>Class</span>
+                    <a href="./classes/{{ class.name }}.html">{{ class.name }}</a>
+                </code>
+            </div>
+            <div class="card-body text-dark">
+                <div class="card-text">
+                    <strong>C++</strong> class with {{ class.methods | length }} methods.
+                </div>
+            </div>
+            <div class="card-footer text-muted font-italic">
+                <small>{{ class.path }}:{{ class.line }}</small>
+            </div>
+        </div>
+        {% endfor %}
+
+        <h3>Functions</h3>
+        {% for func in functions %}
+        <div class="card mb-3">
+            <div class="card-header">
+                <code>
+                    <span>Function</span>
+                </code>
+            </div>
+            <div class="card-body">
+                <code>
+                    {% if func.return_type %}
+                    <span class="text-success">{{ func.return_type }}</span>
+                    {% endif %}
+
+                    <a href="./functions/{{ func.full_name }}.html">{{ func.full_name }}</a>
+
+                    <span class="text-danger">({{ func.params }})</span>
+
+                    {% if func.comment %}
+                    <span>{{ func.comment }}</span>
+                    {% endif %}
+                </code>
+            </div>
+            <div class="card-footer text-muted font-italic">
+                <small>{{ func.path }}:{{ func.line }}</small>
+            </div>
+        </div>
+        {% endfor %}
+
+    </div>
+</body>
+
 </html>

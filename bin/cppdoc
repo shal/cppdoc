@@ -6,10 +6,10 @@ from docgen import DocumentGenerator
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--file',    '-f', help='Path to file.')
-parser.add_argument('--module',  '-m', help='Path to module.')
-parser.add_argument('--project', '-p', help='Path to project.')
-parser.add_argument('--output',  '-o', help='Output result.')
+parser.add_argument("--file",    "-f", help="Path to file.")
+parser.add_argument("--module",  "-m", help="Path to module.")
+parser.add_argument("--project", "-p", help="Path to project.")
+parser.add_argument("--output",  "-o", help="Output result.")
 
 args = parser.parse_args()
 

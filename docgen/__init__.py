@@ -4,89 +4,69 @@ from docgen import cpp
 from jinja2 import Environment, FileSystemLoader
 
 j2_env = Environment(
-    loader=FileSystemLoader('templates'),
+    loader=FileSystemLoader("templates"),
     trim_blocks=True
 )
 
 
 class DocumentGenerator:
     def get_file_content(self):
-        with open(self.path, 'r') as file:
+        with open(self.path, "r") as file:
             content = file.read()
 
         return content
 
     def generate(self):
-        self.process_file()
-        self.create_dir()
+        parser = cpp.BodyParser(self.get_file_content(), self.path)
+        parser.parse()
 
-    def create_dir(self):
+        self.classes = parser.get_classes()
+        self.functions = parser.get_functions()
+        self.generate_files()
+
+    def generate_structure(self):
         if not os.path.exists(self.output):
             os.makedirs(self.output)
+        if not os.path.exists(self.output + "/classes"):
+            os.makedirs(self.output + "/classes")
+        if not os.path.exists(self.output + "/functions"):
+            os.makedirs(self.output + "/functions")
 
-        index_html = j2_env.get_template('main.html').render(classes=self.classes)
-        with open(self.output + "/index.html", 'w') as f:
+        index_html = j2_env.get_template("main.html").render(
+            classes=self.classes,
+            functions=self.functions
+        )
+        with open(self.output + "/index.html", "w") as f:
             f.write(index_html)
 
+    def generate_classes(self):
         for cpp_class in self.classes:
-            output = self.output + "/" + cpp_class.name + ".html"
+            output = self.output + "/classes/" + cpp_class.name + ".html"
 
-            context = {
-                "class": cpp_class
-            }
+            template = j2_env.get_template("class.html")
+            result = template.render(obj=cpp_class)
 
-            template = j2_env.get_template('class.html')
-            result = template.render(context)
-
-            with open(output, 'w') as f:
+            with open(output, "w") as f:
                 f.write(result)
 
-    def process_file(self):
-        content = self.get_file_content()
-        lines = content.split('\n')
+    def generate_functions(self):
+        for cpp_func in self.functions:
+            output = self.output + "/functions/" + cpp_func.full_name + ".html"
 
-        for row, line in enumerate(lines):
-            line = line.strip()
-            lexemes = line.split()
+            template = j2_env.get_template("function.html")
+            result = template.render(obj=cpp_func)
 
-            for col, lexeme in enumerate(lexemes):
-                if cpp.is_class(lexeme):
-                    name = lexemes[col+1]
+            with open(output, "w") as f:
+                f.write(result)
 
-                    if name[-1] == '{' or name[-1] == ';':
-                        name = name[:-1]
-
-                    after_lexeme = " ".join(lexemes[col+1:])
-                    next_lines = "\n".join(lines[row+1:])
-                    after_lexeme += "\n" + next_lines
-
-                    # After class lexeme there are 3 possible cases.
-                    # 1. { - class implementation.
-                    # 2. ; -  class declaration.
-                    # 3. nothing - we should go to process next line.
-
-                    # Case 1,2
-                    for i, ch in enumerate(after_lexeme):
-                        if ch == '{':
-                            class_body = cpp.find_body(after_lexeme[i:])
-                            cpp_class = cpp.Class(name, self.path, row, class_body)
-                            # print(class_body)
-                            break
-                        elif ch == '>' or ch == ';':
-                            cpp_class = cpp.Class(name, self.path, row)
-                            break
-
-                    # print(cpp_class)
-                    self.classes.append(cpp_class)
+    def generate_files(self):
+        self.generate_structure()
+        self.generate_classes()
+        self.generate_functions()
 
     def __init__(self, path, output):
         self.path = path
         self.output = output
 
-        # Logic.
         self.classes = []
-        self.function = []
-        self.modules = []
-
-
-
+        self.functions = []

@@ -1,35 +1,102 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-      <meta charset="utf-8">
-      <title>Main</title>
 
-      <!-- Latest compiled CSS -->
-      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+<head>
+    <meta charset="utf-8">
+    <title>Main</title>
 
-      <!-- jQuery library -->
-      <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <!-- Latest compiled CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
 
-      <!-- Popper JS -->
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+    <!-- jQuery library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 
-      <!-- Latest compiled JavaScript -->
-      <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
-  </head>
-  <body>
-    <p>Class <strong>{{ class.name }}</strong></p>
-    <p>{{ class.description }}</p>
-    <br>
-    <strong>Methods</strong>
+    <!-- Popper JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
 
-     <div>
-        {{ class.body }}
+    <!-- Latest compiled JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <h2><code>{{ obj.name }}</code></h2>
+
+        <strong>TAGS:</strong>
+
+        <span class="badge badge-primary">C++</span>
+        <span class="badge badge-success">Class</span>
+        <span class="badge badge-info">CppDoc</span>
+
+        {% if obj.is_enum %}
+        <span class="badge badge-warning">Enum</span>
+        {% endif %}
+
+        <hr>
+
+        <span class="font-weight-light text-muted">{{ obj.path }}:{{ obj.row }}</span>
+
+
+        <!-- <h3 class="font-weight-bold">Description</h3> -->
+
+        {% if obj.classes %}
+        <h3 class="font-weight-bold">Classes</h3>
+        {% endif %}
+
+        {% for class in obj.classes %}
+        <div class="card mb-3">
+            <div class="card-header">
+                <code>
+                    <span>Class</span>
+                    <a href="./{{ class.name }}.html">{{ class.name }}</a>
+                </code>
+            </div>
+            <div class="card-body text-dark">
+                <div class="card-text">
+                    <strong>C++</strong> class with {{ class.methods | length }} methods.
+                </div>
+            </div>
+            <div class="card-footer text-muted font-italic">
+                <small>{{ class.path }}:{{ obj.name }}:{{ class.line }}</small>
+            </div>
+        </div>
+        {% endfor %}
+
+        {% if obj.methods %}
+        <h3 class="font-weight-bold">Methods</h3>
+        {% endif %}
+
+        {% for method in obj.methods %}
+        <div class="card mb-3 text-white bg-light">
+
+            <div class="card-header">
+                <code>
+                    <span class="badge badge-info">{{ method.type }}</span>
+
+                    {% if method.is_operator %}
+                    <span class="badge badge-success">Operator</span>
+                    {% endif %}
+
+                    {% if method.return_type %}
+                    <span class="text-success">{{ method.return_type }}</span>
+                    {% endif %}
+
+                    <a href="./{{ method.full_name }}.html">{{ method.name }}</a>
+
+                    <span class="text-danger">({{ method.params }})</span>
+                </code>
+            </div>
+            {% if method.comment %}
+            <div class="card-body">
+                <code>
+                    <span>{{ method.comment }}</span>
+                </code>
+            </div>
+            {% endif %}
+
+        </div>
+        {% endfor %}
     </div>
+</body>
 
-    {% for method in class.methods %}
-    <span>{{ method.name }}</span>
-    {% endfor -%}
-
-
-  </body>
 </html>
