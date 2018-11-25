@@ -5,6 +5,8 @@ import re
 class Function:
     def __init__(self, query, path, line, class_name=None, comment=None):
         self.comment = comment
+        self.path = os.path.basename(path)
+
         parts = query.split("(")
 
         type_name = parts[0].split()
@@ -17,6 +19,7 @@ class Function:
 
             if class_name:
                 self.full_name = class_name + "::" + type_name[1]
+                self.path = os.path.basename(path) + ":" + class_name
 
         elif len(type_name) == 1:
             self.name = type_name[0]
@@ -26,11 +29,12 @@ class Function:
 
             if class_name:
                 self.full_name = class_name + "::" + type_name[0]
+                self.path = os.path.basename(path) + ":" + class_name
 
         self.params = " ".join(parts[1:])[0:-1]
 
         self.is_operator = self.name.startswith("operator")
-        self.path = os.path.basename(path)
+
         self.line = line
 
         # TODO: Clean up params.
