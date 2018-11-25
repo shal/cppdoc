@@ -80,7 +80,7 @@
                     <span class="badge badge-success">Operator</span>
                     {% endif %}
 
-                    {% if method.return_type %}
+                    {% if method.html_return_type %}
                     <span class="text-success">{{ method.return_type }}</span>
                     {% endif %}
 
@@ -100,15 +100,11 @@
         </div>
         {% endfor %}
 
-        {% if not (obj.methods and obj.classes) and (obj.clean_html_body) %}
+        {% if (not obj.methods and not obj.classes) and (obj.clean_html_body) %}
         <h3 class="font-weight-bold">Body</h3>
         <code>
             {{ obj.clean_html_body }}
         </code>
-        {% elif not (obj.methods and obj.classes and obj.clean_html_body) %}
-        <div>
-            <h1 class="text-danger">Class body was not found</h1>
-        </div>
         {% endif %}
     </div>
 </body>

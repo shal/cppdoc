@@ -1,28 +1,48 @@
 import os
-from docgen import cpp
-
+import glob
+import re
 from jinja2 import Environment, FileSystemLoader
+
+from docgen import cpp
 
 j2_env = Environment(
     loader=FileSystemLoader("templates"),
     trim_blocks=True
 )
 
+def strip(text):
+    text = re.sub(r"\s{0,}(>|\))", r"\1", text)
+    text = re.sub(r"(<|\()\s{0,}", r"\1", text)
+
+    return text
 
 class DocumentGenerator:
-    def get_file_content(self):
-        with open(self.path, "r") as file:
+    def get_file_content(self, path):
+        with open(path, "r") as file:
             content = file.read()
 
-        return content
+        return strip(content)
 
     def generate(self):
-        parser = cpp.BodyParser(self.get_file_content(), self.path)
-        parser.parse()
+        if self.filePath:
+            path = os.path.normpath(self.filePath)
+            parser = cpp.BodyParser(self.get_file_content(path), path)
+            parser.parse()
 
-        self.classes = parser.get_classes()
-        self.functions = parser.get_functions()
-        self.generate_files()
+            self.classes = parser.get_classes()
+            self.functions = parser.get_functions()
+            self.generate_files()
+        elif self.modulePath:
+            path = os.path.normpath(self.modulePath)
+            paths = cpp.Helper.get_cpp_files(path)
+
+            for path in paths:
+                parser = cpp.BodyParser(self.get_file_content(path), path)
+                parser.parse()
+                self.classes.extend(parser.get_classes())
+                self.functions.extend(parser.get_functions())
+
+            self.generate_files()
 
     def generate_structure(self):
         if not os.path.exists(self.output):
@@ -64,9 +84,12 @@ class DocumentGenerator:
         self.generate_classes()
         self.generate_functions()
 
-    def __init__(self, path, output):
-        self.path = path
-        self.output = output
+    def __init__(self, output, file=None, module=None, project=None):
+        self.output = os.path.normpath(output)
+
+        self.filePath = file
+        self.modulePath = module
+        self.projectPath = project
 
         self.classes = []
         self.functions = []

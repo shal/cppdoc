@@ -21,7 +21,11 @@
 <body>
     <div class="container">
         <h1>CppDoc</h1>
+
+        {% if classes %}
         <h3>Classes</h3>
+        {% endif %}
+
         {% for class in classes %}
         <div class="card mb-3">
             <div class="card-header">
@@ -44,14 +48,17 @@
         </div>
         {% endfor %}
 
+        {% if functions %}
         <h3>Functions</h3>
+        {% endif %}
+
         {% for func in functions %}
         <div class="card mb-3">
             <div class="card-header">
                 <code>
                     <span>Function</span>
-                    {% if func.return_type %}
-                    <span class="text-success">{{ func.return_type }}</span>
+                    {% if func.html_return_type %}
+                    <span class="text-success">{{ func.html_return_type }}</span>
                     {% endif %}
 
                     <a href="./functions/{{ func.full_name }}.html">{{ func.full_name }}</a>

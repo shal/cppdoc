@@ -1,6 +1,6 @@
 import os
 import re
-
+from glob import glob
 
 class Function:
     def __init__(self, query, path, line, class_name=None, comment=None):
@@ -13,6 +13,11 @@ class Function:
 
         if len(type_name) == 2:
             self.return_type = type_name[0]
+
+            # Avoid issue with '<', '>'.
+            self.html_return_type = self.return_type.replace("<", "&lt")
+            self.html_return_type = self.html_return_type.replace(">", "&gt")
+
             self.name = type_name[1]
             self.type = "Method" if class_name else "Function"
             self.full_name = type_name[1]
@@ -110,6 +115,10 @@ class Helper:
     def has_comment_entry(snippet):
         return bool(re.search(r'(\*/|\/\*|/{2,})', snippet))
 
+    @staticmethod
+    def get_cpp_files(path):
+        files = glob(os.path.join(path, '*.cpp'))
+        return files
 
 class BodyParser:
     def __init__(self, snippet, path, class_name=None):
@@ -131,10 +140,15 @@ class BodyParser:
         self.singleLineCommentStarted = False
         self.comment = ""
 
+        self.isFunction = False
+
         self.path = path
 
     def parse(self):
         while self.index < len(self.snippet):
+
+            ####################################### Comments.
+
             if self.snippet[self.index:self.index + 2] == "/*":
                 self.comment = ""
                 self.multiLineCommentStarted = True
@@ -155,7 +169,7 @@ class BodyParser:
                 self.index += 1
                 continue
 
-            #######################################
+            ####################################### Comment.
 
             # Skip and count newlines.
             if self.snippet[self.index] == "\n" and self.singleLineCommentStarted:
@@ -183,15 +197,15 @@ class BodyParser:
                 self.index += 2
                 continue
 
-            #######################################
-            
+            ####################################### Class.
+
             if Helper.is_class(self.snippet[self.index:self.index + 5]):
                 after_class = self.snippet[self.index + 5:].strip()
 
                 class_name = after_class.split()[0]
 
                 # Avoid class names with characters, like "Example{" or "Example;".
-                if class_name[-1] == "{" or class_name[-1] == ";":
+                if class_name[-1] == "{" or class_name[-1] == ";" or class_name[-1] == ":" or class_name[-1] == "(":
                     class_name = class_name[:-1]
 
                 possible_class_body = self.snippet[self.index + 6 + len(class_name):]
@@ -217,7 +231,7 @@ class BodyParser:
                 self.classes.append(cpp_class)
                 continue
 
-            #######################################
+            ####################################### Function.
 
             self.body += self.snippet[self.index]
 
@@ -233,14 +247,23 @@ class BodyParser:
 
                     self.start_line = self.line
 
-                    if class_name != None and Helper.is_constructor(method_name, self.class_name):
+                    if self.class_name != None and Helper.is_constructor(method_name, self.class_name):
                         self.body = method_name
                     else:
-                        self.body = method_type + " " + method_name
+                        if method_type or re.match(r"(.*)::~?(\1)", method_name):
+                            self.body = method_type + " " + method_name
+                        else:
+                            self.index += 1
+                            continue
 
                 self.stack.append(self.snippet[self.index])
             elif self.snippet[self.index] == ")":
+                if len(self.stack) == 0:
+                    self.index += 1
+                    continue
+
                 self.stack.pop()
+
                 if len(self.stack) == 0:
                     for ch in self.snippet[self.index + 1:]:
                         self.index += 1
@@ -256,8 +279,16 @@ class BodyParser:
                             self.methods.append(method)
                             #
                             self.body = ""
+
+                            # Skip function body. Count index and line.
+                            function_body = self.snippet[self.index:]
+                            to_skip = Helper.find_body(function_body)
+                            to_skip_chars = len(to_skip)
+                            to_skip_lines = len(to_skip.split("\n"))
+                            self.index += to_skip_chars
+                            self.line += to_skip_lines
                             break
-                        elif ch == ";" or ch == "}":
+                        elif ch == ";" or ch == "}" or ch == "#":
                             self.body = ""
                             break
             self.index += 1

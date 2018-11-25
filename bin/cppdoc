@@ -14,8 +14,11 @@ parser.add_argument("--output",  "-o", help="Output result.")
 args = parser.parse_args()
 
 if args.file is not None:
-    generator = DocumentGenerator(args.file, args.output)
+    generator = DocumentGenerator(args.output, file=args.file)
     generator.generate()
 elif args.module is not None:
-    generator = DocumentGenerator(args.module, args.output)
+    generator = DocumentGenerator(args.output, module=args.module)
+    generator.generate()
+elif args.project is not None:
+    generator = DocumentGenerator(args.output, project=args.project)
     generator.generate()
