@@ -50,7 +50,13 @@
             </div>
             <div class="card-body text-dark">
                 <div class="card-text">
-                    <strong>C++</strong> function
+                    <code>
+                        {% if obj.comment %}
+                        <span>{{ obj.comment }}</span>
+                        {% else %}
+                        <span><strong>C++</strong> function.</span>
+                        {% endif %}
+                    </code>
                 </div>
             </div>
             <div class="card-footer text-muted font-italic">
@@ -59,5 +65,4 @@
         </div>
     </div>
 </body>
-
 </html>

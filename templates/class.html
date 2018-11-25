@@ -23,8 +23,8 @@
         <h2>
 
             <code>
-                    <span>Class</span>
-                    <span class="text-primary">{{ obj.name }}</span>
+                <span>Class</span>
+                <span class="text-primary">{{ obj.name }}</span>
             </code>
         </h2>
 
@@ -106,9 +106,9 @@
             {{ obj.clean_html_body }}
         </code>
         {% elif not (obj.methods and obj.classes and obj.clean_html_body) %}
-            <div>
-                <h1 class="text-danger">Class body was not found</h1>
-            </div>
+        <div>
+            <h1 class="text-danger">Class body was not found</h1>
+        </div>
         {% endif %}
     </div>
 </body>

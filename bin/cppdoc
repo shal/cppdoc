@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python -B
 
 import argparse
 
@@ -15,4 +15,7 @@ args = parser.parse_args()
 
 if args.file is not None:
     generator = DocumentGenerator(args.file, args.output)
+    generator.generate()
+elif args.module is not None:
+    generator = DocumentGenerator(args.module, args.output)
     generator.generate()
