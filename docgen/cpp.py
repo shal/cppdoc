@@ -82,11 +82,7 @@ class Helper:
 
     @staticmethod
     def is_class(lexeme):
-        return lexeme == "class"
-
-    @staticmethod
-    def is_struct(lexeme):
-        return lexeme == "struct"
+        return (lexeme == "class" or lexeme == "struct")
 
     @staticmethod
     def find_body(snippet):
@@ -155,8 +151,8 @@ class BodyParser:
             if self.multiLineCommentStarted:
                 if self.snippet[self.index] == "\n":
                     self.line += 1
-                self.index += 1
                 self.comment += self.snippet[self.index]
+                self.index += 1
                 continue
 
             #######################################
@@ -171,8 +167,8 @@ class BodyParser:
 
             # Just read the comment.
             if self.singleLineCommentStarted:
-                self.index += 1
                 self.comment += self.snippet[self.index]
+                self.index += 1
                 continue
 
             if self.snippet[self.index:self.index + 3] == "///":
@@ -188,7 +184,7 @@ class BodyParser:
                 continue
 
             #######################################
-            # Class is here
+            
             if Helper.is_class(self.snippet[self.index:self.index + 5]):
                 after_class = self.snippet[self.index + 5:].strip()
 

@@ -20,7 +20,13 @@
 
 <body>
     <div class="container">
-        <h2><code>{{ obj.name }}</code></h2>
+        <h2>
+
+            <code>
+                    <span>Class</span>
+                    <span class="text-primary">{{ obj.name }}</span>
+            </code>
+        </h2>
 
         <strong>TAGS:</strong>
 
@@ -34,10 +40,7 @@
 
         <hr>
 
-        <span class="font-weight-light text-muted">{{ obj.path }}:{{ obj.row }}</span>
-
-
-        <!-- <h3 class="font-weight-bold">Description</h3> -->
+        <span class="font-weight-light text-muted">{{ obj.path }}:{{ obj.line }}</span>
 
         {% if obj.classes %}
         <h3 class="font-weight-bold">Classes</h3>
@@ -96,6 +99,17 @@
 
         </div>
         {% endfor %}
+
+        {% if not (obj.methods and obj.classes) and (obj.clean_html_body) %}
+        <h3 class="font-weight-bold">Body</h3>
+        <code>
+            {{ obj.clean_html_body }}
+        </code>
+        {% elif not (obj.methods and obj.classes and obj.clean_html_body) %}
+            <div>
+                <h1 class="text-danger">Class body was not found</h1>
+            </div>
+        {% endif %}
     </div>
 </body>
 
