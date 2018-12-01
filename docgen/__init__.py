@@ -1,6 +1,8 @@
 import os
 import glob
 import re
+import datetime
+
 from jinja2 import Environment, FileSystemLoader
 
 from docgen import cpp
@@ -52,10 +54,13 @@ class DocumentGenerator:
         if not os.path.exists(self.output + "/functions"):
             os.makedirs(self.output + "/functions")
 
-        index_html = j2_env.get_template("main.html").render(
-            classes=self.classes,
-            functions=self.functions
-        )
+        index_html = j2_env.get_template("main.html").render({
+            "classes": self.classes,
+            "functions": self.functions,
+            "time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "version": "0.0.1"
+        })
+
         with open(self.output + "/index.html", "w") as f:
             f.write(index_html)
 
@@ -68,6 +73,17 @@ class DocumentGenerator:
 
             with open(output, "w") as f:
                 f.write(result)
+
+    def generate_content(self):
+        template = j2_env.get_template("content.html")
+
+        result = template.render({
+            "classes": sorted(self.classes),
+            "functions": sorted(self.functions)
+        })
+
+        with open(self.output + "/content.html", "w") as f:
+            f.write(result)
 
     def generate_functions(self):
         for cpp_func in self.functions:
@@ -83,6 +99,7 @@ class DocumentGenerator:
         self.generate_structure()
         self.generate_classes()
         self.generate_functions()
+        self.generate_content()
 
     def __init__(self, output, file=None, module=None, project=None):
         self.output = os.path.normpath(output)

@@ -2,12 +2,16 @@ import os
 import re
 from glob import glob
 
+# class IncludeDirective:
+#     def __init__(self, path):
+#         self.path = path
+
 class Function:
     def __init__(self, query, path, line, class_name=None, comment=None):
         self.comment = comment
         self.path = os.path.basename(path)
 
-        parts = query.split("(")
+        parts = query.split("(", 1) # 1 - Max split.
 
         type_name = parts[0].split()
 
@@ -45,6 +49,9 @@ class Function:
         # TODO: Clean up params.
         # self.params = self.clean_params()
 
+    def __lt__(self, other):
+        return self.name < other.name
+
     def set_comment(self, comment):
         self.comment = comment
 
@@ -76,6 +83,9 @@ class Class:
 
             self.methods = parser.get_functions()
             self.classes = parser.get_classes()
+
+    def __lt__(self, other):
+         return self.name > other.name
 
     def get_classes(self):
         return self.classes
@@ -146,7 +156,6 @@ class BodyParser:
 
     def parse(self):
         while self.index < len(self.snippet):
-
             ####################################### Comments.
 
             if self.snippet[self.index:self.index + 2] == "/*":
@@ -165,6 +174,7 @@ class BodyParser:
             if self.multiLineCommentStarted:
                 if self.snippet[self.index] == "\n":
                     self.line += 1
+                    self.comment += "<br>"
                 self.comment += self.snippet[self.index]
                 self.index += 1
                 continue
@@ -197,7 +207,13 @@ class BodyParser:
                 self.index += 2
                 continue
 
+            ####################################### Includes.
+
+            # if not self.class_name and self.snippet[self.index:self.index + 8] == "#include":
+
             ####################################### Class.
+
+
 
             if Helper.is_class(self.snippet[self.index:self.index + 5]):
                 after_class = self.snippet[self.index + 5:].strip()
@@ -239,6 +255,7 @@ class BodyParser:
             if self.snippet[self.index] == "\n":
                 self.line += 1
             elif self.snippet[self.index] == "(":
+
                 if len(self.stack) == 0:
                     lexemes = re.split("\s", self.body)
 
@@ -247,14 +264,13 @@ class BodyParser:
 
                     self.start_line = self.line
 
-                    if self.class_name != None and Helper.is_constructor(method_name, self.class_name):
+                    if self.class_name != None and Helper.is_constructor(method_name[:-1], self.class_name):
                         self.body = method_name
                     else:
                         if method_type or re.match(r"(.*)::~?(\1)", method_name):
                             self.body = method_type + " " + method_name
                         else:
                             self.index += 1
-                            continue
 
                 self.stack.append(self.snippet[self.index])
             elif self.snippet[self.index] == ")":

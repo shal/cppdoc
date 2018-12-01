@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Main</title>
+    <title>Content</title>
 
     <!-- Latest compiled CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
@@ -20,7 +20,7 @@
     <div class="container">
         <h2>
             <code>
-                <span>Function</span>
+                <span>Content</span>
             </code>
         </h2>
 
@@ -30,33 +30,25 @@
         <span class="badge badge-success">Function</span>
         <span class="badge badge-info">CppDoc</span>
 
-        {%- if obj.is_method -%}
-        <span class="badge badge-warning">Method</span>
-        {%- endif -%}
-
         <hr>
 
-        <h5>Description</h5>
+        <div class="row">
+            <div class="col">
+                <h4>Functions/Methods</h4>
 
-        <div class="card mb-3">
-            <div class="card-header">
-                <code>
-                    <span class="text-success">{{ obj.html_return_type }}</span>
-                    <span class="text-primary">{{ obj.name }}</span>
-                    <span>({{ obj.params }})</span>
-                </code>
-            </div>
-            <div class="card-body text-dark">
-                <div class="card-text">
-                    {%- if obj.comment -%}
-                    <code>{{ obj.comment }}</code>
-                    {%- else -%}
-                    <span><strong>C++</strong> function.</span>
-                    {%- endif -%}
+                {%- for function in functions -%}
+                <div>
+                    <a href="./functions/{{ function.full_name }}.html">{{ function.name }}</a>
                 </div>
+                {%- endfor -%}
             </div>
-            <div class="card-footer text-muted font-italic">
-                <small>{{ obj.path }}:{{ obj.line }}</small>
+            <div class="col">
+                <h4>Classes</h4>
+                {%- for class in classes -%}
+                <div>
+                    <a href="./classes/{{ class.name }}.html">{{ class.name }}</a>
+                </div>
+                {%- endfor -%}
             </div>
         </div>
     </div>
