@@ -27,6 +27,25 @@
 
         <a href="./content.html">Content</a>
 
+        {%- if includes -%}
+        <h3>Includes</h3>
+        {%- endif -%}
+
+        {%- for include in includes -%}
+        <div class="card mb-3">
+            <div class="card-header">
+                <span class="badge badge-primary">Directive</span>
+                <span class="badge badge-secondary">#include</span>
+                <!-- <code class="text-muted">#include</code> -->
+            </div>
+            <div class="card-body text-dark">
+                <code class="text-success mr-2">
+                    {{ include }}
+                </code>
+            </div>
+        </div>
+        {%- endfor -%}
+
         {%- if classes -%}
         <h3>Classes</h3>
         {%- endif -%}

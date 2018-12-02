@@ -18,6 +18,36 @@ def strip(text):
 
     return text
 
+class ModuleDocumentGenerator:
+    def __init__(self, output, module):
+        self.document_generators = []
+        self.cpp_files = []
+        self.output_dir = os.path.normpath(output)
+        self.module_dir_path = os.path.normpath(module)
+
+    def generate(self):
+        self.cpp_files = sorted(glob.glob(self.module_dir_path + "/*.cpp"))
+
+        for cpp_file in self.cpp_files:
+            output_path_dir = self.output_dir + "/" + os.path.splitext(os.path.basename(cpp_file))[0]
+            gen = DocumentGenerator(output_path_dir, cpp_file)
+            gen.generate()
+
+        self.generate_index()
+
+    def generate_index(self):
+        self.files = list(map(lambda f: cpp.SourceCodeFile(f), self.cpp_files))
+
+        index_html = j2_env.get_template("module.html").render({
+            "files": self.files,
+            "time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "version": "0.0.1",
+            "module": os.path.basename(os.path.dirname(self.module_dir_path + "/") + "/")
+        })
+
+        with open(self.output_dir  + "/index.html", "w") as f:
+            f.write(index_html)
+
 class DocumentGenerator:
     def get_file_content(self, path):
         with open(path, "r") as file:
@@ -33,6 +63,7 @@ class DocumentGenerator:
 
             self.classes = parser.get_classes()
             self.functions = parser.get_functions()
+            self.includes = parser.get_includes()
             self.generate_files()
         elif self.modulePath:
             path = os.path.normpath(self.modulePath)
@@ -54,9 +85,10 @@ class DocumentGenerator:
         if not os.path.exists(self.output + "/functions"):
             os.makedirs(self.output + "/functions")
 
-        index_html = j2_env.get_template("main.html").render({
+        index_html = j2_env.get_template("file.html").render({
             "classes": self.classes,
             "functions": self.functions,
+            "includes": self.includes,
             "time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "version": "0.0.1"
         })

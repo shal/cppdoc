@@ -2,10 +2,6 @@ import os
 import re
 from glob import glob
 
-# class IncludeDirective:
-#     def __init__(self, path):
-#         self.path = path
-
 class Function:
     def __init__(self, query, path, line, class_name=None, comment=None):
         self.comment = comment
@@ -90,6 +86,11 @@ class Class:
     def get_classes(self):
         return self.classes
 
+class SourceCodeFile:
+    def __init__(self, path):
+        self.name = os.path.basename(path)
+        self.path = "./" + os.path.splitext(self.name)[0] + "/index.html"
+
 class Helper:
     @staticmethod
     def is_constructor(method_name, class_name):
@@ -136,6 +137,7 @@ class BodyParser:
         self.methods = []
         self.comments = []
         self.classes = []
+        self.includes = []
 
         self.index = 0
         self.line = 0
@@ -208,12 +210,25 @@ class BodyParser:
                 continue
 
             ####################################### Includes.
-
-            # if not self.class_name and self.snippet[self.index:self.index + 8] == "#include":
+            # Find all "include" directives for source code file.
+            if self.snippet[self.index:self.index + 8] == "#include":
+                start = self.index
+                self.index += 8
+                isStarted = False
+                for ch in self.snippet[self.index:]:
+                    if ch == ">":
+                        print(self.snippet[start:self.index + 1])
+                        self.includes.append(self.snippet[start:self.index + 1])
+                        break
+                    elif ch == "\"" and isStarted:
+                        self.includes.append(self.snippet[start:self.index + 1])
+                        print(self.snippet[start:self.index + 1])
+                        break
+                    elif ch == "\"":
+                        isStarted = True
+                    self.index += 1
 
             ####################################### Class.
-
-
 
             if Helper.is_class(self.snippet[self.index:self.index + 5]):
                 after_class = self.snippet[self.index + 5:].strip()
@@ -308,6 +323,11 @@ class BodyParser:
                             self.body = ""
                             break
             self.index += 1
+
+    def get_includes(self):
+        includes = self.includes[:]
+
+        return includes
 
     def get_functions(self):
         functions = self.methods[:]
