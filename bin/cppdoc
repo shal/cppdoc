@@ -2,7 +2,7 @@
 
 import argparse
 
-from docgen import DocumentGenerator, ModuleDocumentGenerator
+from docgen import DocumentGenerator, ModuleDocumentGenerator, ProjectDocumentGenerator
 
 parser = argparse.ArgumentParser()
 
@@ -20,5 +20,5 @@ elif args.module is not None:
     generator = ModuleDocumentGenerator(args.output, args.module)
     generator.generate()
 elif args.project is not None:
-    generator = DocumentGenerator(args.output, project=args.project)
+    generator = ProjectDocumentGenerator(args.output, args.project)
     generator.generate()

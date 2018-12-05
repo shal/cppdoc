@@ -7,6 +7,8 @@ from jinja2 import Environment, FileSystemLoader
 
 from docgen import cpp
 
+VERSION = "0.0.1"
+
 j2_env = Environment(
     loader=FileSystemLoader("templates"),
     trim_blocks=True
@@ -17,6 +19,41 @@ def strip(text):
     text = re.sub(r"(<|\()\s{0,}", r"\1", text)
 
     return text
+
+class ProjectDocumentGenerator:
+    def __init__(self, output, project):
+        self.document_generators = []
+        self.cpp_files = []
+        self.output_dir = os.path.normpath(output)
+        self.project_dir_path = os.path.normpath(project)
+
+    def generate(self):
+        self.modules = list(map(lambda x: os.path.join(self.project_dir_path, x), os.listdir(self.project_dir_path)))
+        self.modules = list(filter(lambda x: os.path.isdir(x), self.modules))
+
+        for module_path in self.modules:
+            output_path_dir = self.output_dir + "/" + os.path.basename(module_path)
+
+            if not os.path.exists(output_path_dir):
+                os.makedirs(output_path_dir)
+
+            gen = ModuleDocumentGenerator(output_path_dir, module_path)
+            gen.generate()
+
+        self.generate_index()
+
+    def generate_index(self):
+        self.modules = list(map(lambda m: cpp.SourceCodeModule(m), self.modules))
+
+        index_html = j2_env.get_template("project.html").render({
+            "modules": self.modules,
+            "time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "version": VERSION,
+            "project": os.path.basename(os.path.dirname(self.project_dir_path + "/") + "/")
+        })
+
+        with open(self.output_dir  + "/index.html", "w") as f:
+            f.write(index_html)
 
 class ModuleDocumentGenerator:
     def __init__(self, output, module):
@@ -41,7 +78,7 @@ class ModuleDocumentGenerator:
         index_html = j2_env.get_template("module.html").render({
             "files": self.files,
             "time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "version": "0.0.1",
+            "version": VERSION,
             "module": os.path.basename(os.path.dirname(self.module_dir_path + "/") + "/")
         })
 
@@ -90,7 +127,7 @@ class DocumentGenerator:
             "functions": self.functions,
             "includes": self.includes,
             "time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "version": "0.0.1"
+            "version": VERSION
         })
 
         with open(self.output + "/index.html", "w") as f:

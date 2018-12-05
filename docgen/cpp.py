@@ -86,6 +86,11 @@ class Class:
     def get_classes(self):
         return self.classes
 
+class SourceCodeModule:
+    def __init__(self, path):
+        self.name = os.path.basename(path)
+        self.path = "./" + os.path.splitext(self.name)[0] + "/index.html"
+
 class SourceCodeFile:
     def __init__(self, path):
         self.name = os.path.basename(path)
@@ -217,12 +222,10 @@ class BodyParser:
                 isStarted = False
                 for ch in self.snippet[self.index:]:
                     if ch == ">":
-                        print(self.snippet[start:self.index + 1])
                         self.includes.append(self.snippet[start:self.index + 1])
                         break
                     elif ch == "\"" and isStarted:
                         self.includes.append(self.snippet[start:self.index + 1])
-                        print(self.snippet[start:self.index + 1])
                         break
                     elif ch == "\"":
                         isStarted = True
