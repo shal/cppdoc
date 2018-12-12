@@ -208,15 +208,16 @@ class BodyParser:
                 self.index += 8
                 isStarted = False
                 for ch in self.snippet[self.index:]:
+                    self.index += 1
                     if ch == ">":
-                        self.includes.append(self.snippet[start:self.index + 1])
+                        tmp = self.snippet[start:self.index].replace('<', '&lt').replace('>', '&gt')
+                        self.includes.append(tmp)
                         break
                     elif ch == "\"" and isStarted:
-                        self.includes.append(self.snippet[start:self.index + 1])
+                        self.includes.append(self.snippet[start:self.index])
                         break
                     elif ch == "\"":
                         isStarted = True
-                    self.index += 1
 
             ####################################### Class.
 
