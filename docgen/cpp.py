@@ -42,24 +42,11 @@ class Function:
 
         self.line = line
 
-        # TODO: Clean up params.
-        # self.params = self.clean_params()
-
     def __lt__(self, other):
         return self.name < other.name
 
     def set_comment(self, comment):
         self.comment = comment
-
-    # TODO: Finish.
-    # def clean_params(self):
-    #     isOk = True
-    #     newParams = self.params[:]
-    #     for ch in params:
-    #         if (ch == ";" or ch == ",") and not isOk:
-    #             continue
-    #         else:
-    #             newParams += ch
 
 class Class:
     def __init__(self, name, path, line, body=None):
@@ -260,8 +247,6 @@ class BodyParser:
                         cpp_class = Class(class_name, self.path, self.line)
                         break
 
-                # TODO: Check if class has enum prefix
-                # cpp_class.is_enum = lexemes[col - 1] == "enum"
                 self.classes.append(cpp_class)
                 continue
 
