@@ -55,7 +55,7 @@ class ProjectDocumentGenerator:
             "project": os.path.basename(os.path.dirname(self.project_dir_path + "/") + "/")
         })
 
-        with open(self.output_dir  + "/index.html", "w") as f:
+        with open(self.output_dir + "/index.html", "w") as f:
             f.write(index_html)
 
 
@@ -86,7 +86,7 @@ class ModuleDocumentGenerator:
             "module": os.path.basename(os.path.dirname(self.module_dir_path + "/") + "/")
         })
 
-        with open(self.output_dir  + "/index.html", "w") as f:
+        with open(self.output_dir + "/index.html", "w") as f:
             f.write(index_html)
 
 

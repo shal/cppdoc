@@ -6,6 +6,7 @@ from glob import glob
 
 class Helper:
     """Class with tiny parsing helper methods."""
+
     @staticmethod
     def is_constructor(method_name, class_name):
         return method_name == class_name

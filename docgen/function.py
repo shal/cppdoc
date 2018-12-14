@@ -3,6 +3,7 @@ import os
 
 class Function:
     """C++ function representation."""
+
     def __init__(self, query, path, line, class_name=None, comment=None):
         self.comment = comment
         self.path = os.path.basename(path)

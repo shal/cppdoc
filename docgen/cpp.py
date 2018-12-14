@@ -6,8 +6,10 @@ from docgen.helpers import Helper
 
 from termcolor import colored
 
+
 class Class:
     """C++ class/struct representation."""
+
     def __init__(self, name, path, line, body=None):
         self.name = name
         self.path = os.path.basename(path)
