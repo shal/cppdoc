@@ -7,18 +7,20 @@ from jinja2 import Environment, FileSystemLoader
 
 from docgen import cpp
 
-VERSION = "0.0.1"
+from docgen.version import VERSION
 
 j2_env = Environment(
     loader=FileSystemLoader("templates"),
     trim_blocks=True
 )
 
+
 def strip(text):
-    text = re.sub(r"\s{0,}(>|\))", r"\1", text)
-    text = re.sub(r"(<|\()\s{0,}", r"\1", text)
+    text = re.sub(r"\s*(>|\))", r"\1", text)
+    text = re.sub(r"(<|\()\s*", r"\1", text)
 
     return text
+
 
 class ProjectDocumentGenerator:
     def __init__(self, output, project):
@@ -55,6 +57,7 @@ class ProjectDocumentGenerator:
         with open(self.output_dir  + "/index.html", "w") as f:
             f.write(index_html)
 
+
 class ModuleDocumentGenerator:
     def __init__(self, output, module):
         self.document_generators = []
@@ -85,6 +88,7 @@ class ModuleDocumentGenerator:
         with open(self.output_dir  + "/index.html", "w") as f:
             f.write(index_html)
 
+
 class DocumentGenerator:
     def get_file_content(self, path):
         with open(path, "r") as file:
@@ -93,26 +97,14 @@ class DocumentGenerator:
         return strip(content)
 
     def generate(self):
-        if self.filePath:
-            path = os.path.normpath(self.filePath)
-            parser = cpp.BodyParser(self.get_file_content(path), path)
-            parser.parse()
+        path = os.path.normpath(self.filePath)
+        parser = cpp.BodyParser(self.get_file_content(path), path)
+        parser.parse()
 
-            self.classes = parser.get_classes()
-            self.functions = parser.get_functions()
-            self.includes = parser.get_includes()
-            self.generate_files()
-        elif self.modulePath:
-            path = os.path.normpath(self.modulePath)
-            paths = cpp.Helper.get_cpp_files(path)
-
-            for path in paths:
-                parser = cpp.BodyParser(self.get_file_content(path), path)
-                parser.parse()
-                self.classes.extend(parser.get_classes())
-                self.functions.extend(parser.get_functions())
-
-            self.generate_files()
+        self.classes = parser.get_classes()
+        self.functions = parser.get_functions()
+        self.includes = parser.get_includes()
+        self.generate_files()
 
     def generate_structure(self):
         if not os.path.exists(self.output):
@@ -170,12 +162,10 @@ class DocumentGenerator:
         self.generate_functions()
         self.generate_content()
 
-    def __init__(self, output, file=None, module=None, project=None):
+    def __init__(self, output, file):
         self.output = os.path.normpath(output)
 
         self.filePath = file
-        self.modulePath = module
-        self.projectPath = project
 
         self.classes = []
         self.functions = []

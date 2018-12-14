@@ -1,54 +1,12 @@
-import os
 import re
-from glob import glob
+import os
 
-class Function:
-    def __init__(self, query, path, line, class_name=None, comment=None):
-        self.comment = comment
-        self.path = os.path.basename(path)
+from docgen.function import Function
+from docgen.helpers import Helper
 
-        parts = query.split("(", 1) # 1 - Max split.
-
-        type_name = parts[0].split()
-
-        if len(type_name) == 2:
-            self.return_type = type_name[0]
-
-            # Avoid issue with '<', '>'.
-            self.html_return_type = self.return_type.replace("<", "&lt")
-            self.html_return_type = self.html_return_type.replace(">", "&gt")
-
-            self.name = type_name[1]
-            self.type = "Method" if class_name else "Function"
-            self.full_name = type_name[1]
-
-            if class_name:
-                self.full_name = class_name + "::" + type_name[1]
-                self.path = os.path.basename(path) + ":" + class_name
-
-        elif len(type_name) == 1:
-            self.name = type_name[0]
-            self.return_type = None
-            self.type = "Constructor"
-            self.full_name = type_name[0]
-
-            if class_name:
-                self.full_name = class_name + "::" + type_name[0]
-                self.path = os.path.basename(path) + ":" + class_name
-
-        self.params = " ".join(parts[1:])[0:-1]
-
-        self.is_operator = self.name.startswith("operator")
-
-        self.line = line
-
-    def __lt__(self, other):
-        return self.name < other.name
-
-    def set_comment(self, comment):
-        self.comment = comment
 
 class Class:
+    """C++ class/struct representation."""
     def __init__(self, name, path, line, body=None):
         self.name = name
         self.path = os.path.basename(path)
@@ -61,67 +19,21 @@ class Class:
         if body:
             self.clean_html_body = body.replace("\n", "<br>")
 
-            parser = BodyParser(self.body, self.path, self.name)
-            parser.parse()
+            try:
+                parser = BodyParser(self.body, self.path, self.name)
+                parser.parse()
+            except Exception as error:
+                print(error)
 
             self.methods = parser.get_functions()
             self.classes = parser.get_classes()
 
     def __lt__(self, other):
-         return self.name > other.name
+        return self.name > other.name
 
     def get_classes(self):
         return self.classes
 
-class SourceCodeModule:
-    def __init__(self, path):
-        self.name = os.path.basename(path)
-        self.path = "./" + os.path.splitext(self.name)[0] + "/index.html"
-
-class SourceCodeFile:
-    def __init__(self, path):
-        self.name = os.path.basename(path)
-        self.path = "./" + os.path.splitext(self.name)[0] + "/index.html"
-
-class Helper:
-    @staticmethod
-    def is_constructor(method_name, class_name):
-        return method_name == class_name
-
-    @staticmethod
-    def is_class(lexeme):
-        return (lexeme == "class" or lexeme == "struct")
-
-    @staticmethod
-    def find_body(snippet):
-        stack = []
-        body = ""
-        for ch in snippet:
-            body += ch
-            if ch == "{":
-                stack.append(ch)
-            elif ch == "}" and stack[-1] == "{":
-                stack.pop()
-                if len(stack) == 0:
-                    return body
-
-        return ValueError("Snippet doesn't exit class body.")
-
-    @staticmethod
-    def clean_up_from_comments(snippet):
-        snippet = re.sub(r'/\*[^\*/]+\*/', '', snippet)
-        snippet = re.sub(r'/{2,}.*\n', '', snippet)
-
-        return snippet
-
-    @staticmethod
-    def has_comment_entry(snippet):
-        return bool(re.search(r'(\*/|\/\*|/{2,})', snippet))
-
-    @staticmethod
-    def get_cpp_files(path):
-        files = glob(os.path.join(path, '*.cpp'))
-        return files
 
 class BodyParser:
     def __init__(self, snippet, path, class_name=None):
@@ -150,7 +62,7 @@ class BodyParser:
 
     def parse(self):
         while self.index < len(self.snippet):
-            ####################################### Comments.
+            # Comments.
 
             if self.snippet[self.index:self.index + 2] == "/*":
                 self.comment = ""
@@ -173,7 +85,7 @@ class BodyParser:
                 self.index += 1
                 continue
 
-            ####################################### Comment.
+            # Comment.
 
             # Skip and count newlines.
             if self.snippet[self.index] == "\n" and self.singleLineCommentStarted:
@@ -201,7 +113,7 @@ class BodyParser:
                 self.index += 2
                 continue
 
-            ####################################### Includes.
+            # Includes.
             # Find all "include" directives for source code file.
             if self.snippet[self.index:self.index + 8] == "#include":
                 start = self.index
@@ -219,7 +131,7 @@ class BodyParser:
                     elif ch == "\"":
                         isStarted = True
 
-            ####################################### Class.
+            # Class.
 
             if Helper.is_class(self.snippet[self.index:self.index + 5]):
                 after_class = self.snippet[self.index + 5:].strip()
@@ -251,7 +163,7 @@ class BodyParser:
                 self.classes.append(cpp_class)
                 continue
 
-            ####################################### Function.
+            # Function.
 
             self.body += self.snippet[self.index]
 
