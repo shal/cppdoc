@@ -7,7 +7,7 @@ from jinja2 import Environment, FileSystemLoader
 from termcolor import colored
 
 from docgen import cpp
-from docgen.version import VERSION
+from docgen.cppdoc import CppDoc
 from docgen.source_code import SourceCodeModule, SourceCodeFile
 
 j2_env = Environment(
@@ -51,7 +51,7 @@ class ProjectDocumentGenerator:
         index_html = j2_env.get_template("project.html").render({
             "modules": self.modules,
             "time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "version": VERSION,
+            "version": CppDoc.VERSION,
             "project": os.path.basename(os.path.dirname(self.project_dir_path + "/") + "/")
         })
 
@@ -82,7 +82,7 @@ class ModuleDocumentGenerator:
         index_html = j2_env.get_template("module.html").render({
             "files": self.files,
             "time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "version": VERSION,
+            "version": CppDoc.VERSION,
             "module": os.path.basename(os.path.dirname(self.module_dir_path + "/") + "/")
         })
 
@@ -124,7 +124,7 @@ class DocumentGenerator:
             "functions": self.functions,
             "includes": self.includes,
             "time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "version": VERSION
+            "version": CppDoc.VERSION
         })
 
         with open(self.output + "/index.html", "w") as f:

@@ -3,7 +3,7 @@
 import argparse
 
 from docgen import DocumentGenerator, ModuleDocumentGenerator, ProjectDocumentGenerator
-from docgen.version import VERSION
+from docgen.cppdoc import CppDoc
 
 parser = argparse.ArgumentParser()
 
@@ -12,7 +12,7 @@ parser.add_argument("--module",  "-m", help="Path to module.")
 parser.add_argument("--project", "-p", help="Path to project.")
 parser.add_argument("--output",  "-o", help="Output result.")
 
-parser.add_argument('--version', action='version', version=VERSION)
+parser.add_argument('--version', action='version', version=CppDoc.VERSION)
 
 args = parser.parse_args()
 
