@@ -4,6 +4,9 @@ import os
 from docgen.function import Function
 from docgen.helpers import Helper
 
+from termcolor import colored
+
+import code
 
 class Class:
     """C++ class/struct representation."""
@@ -23,7 +26,7 @@ class Class:
                 parser = BodyParser(self.body, self.path, self.name)
                 parser.parse()
             except Exception as error:
-                print(error)
+                print(colored(error, 'red'))
 
             self.methods = parser.get_functions()
             self.classes = parser.get_classes()
@@ -43,22 +46,43 @@ class BodyParser:
         self.classes = []
         self.includes = []
 
-        self.index = 0
-        self.line = 0
-        self.number = 0
+        self.index = int()
+        self.line = int()
+        self.number = int()
 
-        self.body = ""
+        self.body = str()
 
         self.snippet = snippet
         self.class_name = class_name
 
-        self.multiLineCommentStarted = False
-        self.singleLineCommentStarted = False
-        self.comment = ""
+        self.multi_line_comment_started = False
+        self.single_line_comment_started = False
+        self.comment = str()
 
-        self.isFunction = False
+        self.is_function = False
 
         self.path = path
+
+        self.start_line = int()
+
+
+    def process_macros(self):
+        leftovers = self.snippet[self.index:]
+        index = 0
+
+        while index < len(leftovers) - 2:
+            if leftovers[index:index + 2] == "\\\n":
+                index += 2
+                self.line += 1
+            elif leftovers[index:index + 1] == "\n":
+                index += 1
+                self.line += 1
+                break
+            else:
+                index += 1
+
+        print(self.snippet[self.index:self.index + index])
+        self.index += index
 
     def parse(self):
         while self.index < len(self.snippet):
@@ -66,18 +90,18 @@ class BodyParser:
 
             if self.snippet[self.index:self.index + 2] == "/*":
                 self.comment = ""
-                self.multiLineCommentStarted = True
+                self.multi_line_comment_started = True
                 self.index += 2
                 continue
 
             if self.snippet[self.index:self.index + 2] == "*/":
                 self.comments.append(self.comment)
-                self.multiLineCommentStarted = False
+                self.multi_line_comment_started = False
                 self.index += 2
                 self.comment = ""
                 continue
 
-            if self.multiLineCommentStarted:
+            if self.multi_line_comment_started:
                 if self.snippet[self.index] == "\n":
                     self.line += 1
                     self.comment += "<br>"
@@ -88,52 +112,62 @@ class BodyParser:
             # Comment.
 
             # Skip and count newlines.
-            if self.snippet[self.index] == "\n" and self.singleLineCommentStarted:
+            if self.snippet[self.index] == "\n" and self.single_line_comment_started:
                 self.line += 1
                 self.index += 1
-                self.singleLineCommentStarted = False
+                self.single_line_comment_started = False
                 self.comments.append(self.comment)
                 continue
 
             # Just read the comment.
-            if self.singleLineCommentStarted:
+            if self.single_line_comment_started:
                 self.comment += self.snippet[self.index]
                 self.index += 1
                 continue
 
             if self.snippet[self.index:self.index + 3] == "///":
                 self.comment = ""
-                self.singleLineCommentStarted = True
+                self.single_line_comment_started = True
                 self.index += 3
                 continue
 
             if self.snippet[self.index:self.index + 2] == "//":
                 self.comment = ""
-                self.singleLineCommentStarted = True
+                self.single_line_comment_started = True
                 self.index += 2
                 continue
+
+            # Macros.
+            # print(self.snippet[self.index:self.index + 7])
+            if self.snippet[self.index:self.index + 7] == "#define":
+                self.index += 6
+                self.process_macros()
 
             # Includes.
             # Find all "include" directives for source code file.
             if self.snippet[self.index:self.index + 8] == "#include":
                 start = self.index
                 self.index += 8
-                isStarted = False
+                is_started = False
                 for ch in self.snippet[self.index:]:
                     self.index += 1
                     if ch == ">":
                         tmp = self.snippet[start:self.index].replace('<', '&lt').replace('>', '&gt')
                         self.includes.append(tmp)
                         break
-                    elif ch == "\"" and isStarted:
+                    elif ch == "\"" and is_started:
                         self.includes.append(self.snippet[start:self.index])
                         break
                     elif ch == "\"":
-                        isStarted = True
+                        is_started = True
 
-            # Class.
+            # Class & Struct.
 
-            if Helper.is_class(self.snippet[self.index:self.index + 5]):
+            # print(Helper.is_struct(self.snippet[self.index:self.index + 6]))
+            # print(self.snippet[self.index:self.index + 6])
+
+            if Helper.is_class(self.snippet[self.index:self.index + 5]) or \
+                    Helper.is_struct(self.snippet[self.index:self.index + 6]):
                 after_class = self.snippet[self.index + 5:].strip()
 
                 class_name = after_class.split()[0]
@@ -180,7 +214,7 @@ class BodyParser:
 
                     self.start_line = self.line
 
-                    if self.class_name != None and Helper.is_constructor(method_name[:-1], self.class_name):
+                    if self.class_name is None and Helper.is_constructor(method_name[:-1], self.class_name):
                         self.body = method_name
                     else:
                         if method_type or re.match(r"(.*)::~?(\1)", method_name):

@@ -12,7 +12,11 @@ class Helper:
 
     @staticmethod
     def is_class(lexeme):
-        return lexeme == "class" or lexeme == "struct"
+        return lexeme == "class"
+
+    @staticmethod
+    def is_struct(lexeme):
+        return lexeme == "struct"
 
     @staticmethod
     def find_body(snippet):

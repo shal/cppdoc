@@ -4,10 +4,11 @@ import re
 import datetime
 
 from jinja2 import Environment, FileSystemLoader
+from termcolor import colored
 
 from docgen import cpp
-
 from docgen.version import VERSION
+from docgen.source_code import SourceCodeModule, SourceCodeFile
 
 j2_env = Environment(
     loader=FileSystemLoader("templates"),
@@ -45,7 +46,7 @@ class ProjectDocumentGenerator:
         self.generate_index()
 
     def generate_index(self):
-        self.modules = list(map(lambda m: cpp.SourceCodeModule(m), self.modules))
+        self.modules = list(map(lambda m: SourceCodeModule(m), self.modules))
 
         index_html = j2_env.get_template("project.html").render({
             "modules": self.modules,
@@ -76,7 +77,7 @@ class ModuleDocumentGenerator:
         self.generate_index()
 
     def generate_index(self):
-        self.files = list(map(lambda f: cpp.SourceCodeFile(f), self.cpp_files))
+        self.files = list(map(lambda f: SourceCodeFile(f), self.cpp_files))
 
         index_html = j2_env.get_template("module.html").render({
             "files": self.files,
@@ -98,13 +99,17 @@ class DocumentGenerator:
 
     def generate(self):
         path = os.path.normpath(self.filePath)
-        parser = cpp.BodyParser(self.get_file_content(path), path)
-        parser.parse()
 
-        self.classes = parser.get_classes()
-        self.functions = parser.get_functions()
-        self.includes = parser.get_includes()
-        self.generate_files()
+        try:
+            parser = cpp.BodyParser(self.get_file_content(path), path)
+            parser.parse()
+
+            self.classes = parser.get_classes()
+            self.functions = parser.get_functions()
+            self.includes = parser.get_includes()
+            self.generate_files()
+        except Exception as error:
+            print(colored(error, 'red'))
 
     def generate_structure(self):
         if not os.path.exists(self.output):
