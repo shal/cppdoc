@@ -65,6 +65,72 @@ class BodyParser:
 
         self.start_line = int()
 
+    def process_template(self):
+        index = int()
+
+        after_template = self.snippet[self.index:].strip()
+        while after_template[index] is not ">":
+            index += 1
+
+        self.index += index + 2
+
+    def process_struct(self):
+        after_struct = self.snippet[self.index + 6:].strip()
+
+        struct_name = after_struct.split()[0]
+
+        # Avoid class names with characters, like "Example{" or "Example;".
+        if struct_name[-1] == "{" or struct_name[-1] == ";" or struct_name[-1] == ":" or struct_name[-1] == "(":
+            struct_name = struct_name[:-1]
+
+        possible_struct_body = self.snippet[self.index + 7 + len(struct_name):]
+
+        self.index += 7 + len(struct_name) + 1
+
+        for i, ch in enumerate(possible_struct_body):
+            self.index += 1
+            if ch == "\n":
+                self.line += 1
+            elif ch == "{":
+                class_body = Helper.find_body(possible_struct_body[i:])
+                self.index += len(class_body)
+                self.line += len(class_body.split("\n"))
+                cpp_class = Class(struct_name, self.path, self.line, class_body)
+                break
+            elif ch == ">" or ch == ";":
+                cpp_class = Class(struct_name, self.path, self.line)
+                break
+
+        self.classes.append(cpp_class)
+
+    def process_class(self):
+        after_class = self.snippet[self.index + 5:].strip()
+
+        class_name = after_class.split()[0]
+
+        # Avoid class names with characters, like "Example{" or "Example;".
+        if class_name[-1] == "{" or class_name[-1] == ";" or class_name[-1] == ":" or class_name[-1] == "(":
+            class_name = class_name[:-1]
+
+        possible_class_body = self.snippet[self.index + 6 + len(class_name):]
+
+        self.index += 6 + len(class_name) + 1
+
+        for i, ch in enumerate(possible_class_body):
+            self.index += 1
+            if ch == "\n":
+                self.line += 1
+            elif ch == "{":
+                class_body = Helper.find_body(possible_class_body[i:])
+                self.index += len(class_body)
+                self.line += len(class_body.split("\n"))
+                cpp_class = Class(class_name, self.path, self.line, class_body)
+                break
+            elif ch == ">" or ch == ";":
+                cpp_class = Class(class_name, self.path, self.line)
+                break
+
+        self.classes.append(cpp_class)
 
     def process_macros(self):
         leftovers = self.snippet[self.index:]
@@ -81,7 +147,6 @@ class BodyParser:
             else:
                 index += 1
 
-        print(self.snippet[self.index:self.index + index])
         self.index += index
 
     def parse(self):
@@ -137,6 +202,11 @@ class BodyParser:
                 self.index += 2
                 continue
 
+            # Templates.
+            if self.snippet[self.index:self.index + 8] == "template":
+                self.index += 8
+                self.process_template()
+
             # Macros.
             # print(self.snippet[self.index:self.index + 7])
             if self.snippet[self.index:self.index + 7] == "#define":
@@ -161,40 +231,16 @@ class BodyParser:
                     elif ch == "\"":
                         is_started = True
 
-            # Class & Struct.
+            # Struct.
 
-            # print(Helper.is_struct(self.snippet[self.index:self.index + 6]))
-            # print(self.snippet[self.index:self.index + 6])
+            if Helper.is_struct(self.snippet[self.index:self.index + 6]):
+                self.process_struct()
+                continue
 
-            if Helper.is_class(self.snippet[self.index:self.index + 5]) or \
-                    Helper.is_struct(self.snippet[self.index:self.index + 6]):
-                after_class = self.snippet[self.index + 5:].strip()
+            # Class.
 
-                class_name = after_class.split()[0]
-
-                # Avoid class names with characters, like "Example{" or "Example;".
-                if class_name[-1] == "{" or class_name[-1] == ";" or class_name[-1] == ":" or class_name[-1] == "(":
-                    class_name = class_name[:-1]
-
-                possible_class_body = self.snippet[self.index + 6 + len(class_name):]
-
-                self.index += 6 + len(class_name) + 1
-
-                for i, ch in enumerate(possible_class_body):
-                    self.index += 1
-                    if ch == "\n":
-                        self.line += 1
-                    elif ch == "{":
-                        class_body = Helper.find_body(possible_class_body[i:])
-                        self.index += len(class_body)
-                        self.line += len(class_body.split("\n"))
-                        cpp_class = Class(class_name, self.path, self.line, class_body)
-                        break
-                    elif ch == ">" or ch == ";":
-                        cpp_class = Class(class_name, self.path, self.line)
-                        break
-
-                self.classes.append(cpp_class)
+            if Helper.is_class(self.snippet[self.index:self.index + 5]):
+                self.process_class()
                 continue
 
             # Function.
