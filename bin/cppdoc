@@ -17,11 +17,16 @@ parser.add_argument('--version', action='version', version=CppDoc.VERSION)
 args = parser.parse_args()
 
 if args.file is not None:
+
     generator = DocumentGenerator(args.output, args.file)
     generator.generate()
+
 elif args.module is not None:
+
     generator = ModuleDocumentGenerator(args.output, args.module)
     generator.generate()
+
 elif args.project is not None:
+
     generator = ProjectDocumentGenerator(args.output, args.project)
     generator.generate()

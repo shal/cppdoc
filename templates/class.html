@@ -71,7 +71,7 @@
 
             <div class="card-header">
                 <code>
-                    <span class="badge badge-info mr-2">{{ method.type }}</span>
+                    <span class="badge badge-info mr-2">{{ method.kind }}</span>
 
                     {%- if method.is_operator -%}
                     <span class="badge badge-success mr-2">Operator</span>
@@ -97,10 +97,10 @@
         </div>
         {%- endfor -%}
 
-        {%- if (not obj.methods and not obj.classes) and (obj.clean_html_body) -%}
+        {%- if (not obj.methods and not obj.classes) and (obj.html_body) -%}
         <h3 class="font-weight-bold">Body</h3>
         <code>
-            {{ obj.clean_html_body }}
+            {{ obj.html_body }}
         </code>
         {%- endif -%}
     </div>
