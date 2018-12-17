@@ -7,18 +7,6 @@ from glob import glob
 class Helper:
     """Class with tiny parsing helper methods."""
 
-    # @staticmethod
-    # def is_constructor(method_name, class_name):
-    #     return method_name == class_name
-
-    # @staticmethod
-    # def is_class(lexeme):
-    #     return lexeme == "class"
-
-    # @staticmethod
-    # def is_structure(lexeme):
-    #     return lexeme == "struct"
-
     @staticmethod
     def find_body(snippet):
         stack = []
