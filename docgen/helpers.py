@@ -9,7 +9,7 @@ class Helper:
 
     @staticmethod
     def find_body(snippet):
-        stack = []
+        stack = list()
         body = ""
         for ch in snippet:
             body += ch
