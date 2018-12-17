@@ -1,49 +1,64 @@
 import os
 import datetime
+import glob
 
-from docgen.base_generator import BaseGenerator
-from docgen.module_document_generator import ModuleDocumentGenerator
+from docgen.base_generator import BaseGenerator, path_normalizer
+from docgen.module_document_generator import ModuleDocumentGenerator, EmptyModuleException
 from docgen.cppdoc import CppDoc
 from docgen.source_code import SourceCodeModule
 
 
 class ProjectDocumentGenerator(BaseGenerator):
-    """HTML documentation generator for folder with folders with .cpp files"""
+    """HTML documentation generator for directory with modules"""
 
-    def __init__(self, output, project):
+    @path_normalizer
+    def __init__(self, output, path):
         super(ProjectDocumentGenerator, self).__init__()
-        
-        self.document_generators = list()
-        self.cpp_files = list()
-        self.modules = list()
 
-        self.output_dir = os.path.normpath(output)
-        self.project_dir_path = os.path.normpath(project)
+        self.output_path = output
+        self.path = path
+
+        modules = list(map(lambda x: os.path.join(self.path, x), os.listdir(self.path)))
+        self.__modules = list(filter(lambda x: os.path.isdir(x), modules))
+
+    @property
+    def modules_with_cpp_files(self) -> list:
+        return list(
+            filter(
+                lambda m: len(glob.glob(m + "/*.cpp")) != 0, self.__modules
+            )
+        )
+
+    @property
+    def base_path(self):
+        return os.path.basename(self.path)
+
+    @property
+    def modules_as_objects(self) -> list:
+        return list(map(lambda m: SourceCodeModule(m), self.modules_with_cpp_files))
 
     def generate(self):
-        self.modules = list(map(lambda x: os.path.join(self.project_dir_path, x), os.listdir(self.project_dir_path)))
-        self.modules = list(filter(lambda x: os.path.isdir(x), self.modules))
-
-        for module_path in self.modules:
-            output_path_dir = self.output_dir + "/" + os.path.basename(module_path)
+        for module_path in self.modules_with_cpp_files:
+            output_path_dir = self.output_path + "/" + os.path.basename(module_path)
 
             if not os.path.exists(output_path_dir):
                 os.makedirs(output_path_dir)
 
-            gen = ModuleDocumentGenerator(output_path_dir, module_path)
-            gen.generate()
+            try:
+                gen = ModuleDocumentGenerator(output_path_dir, module_path)
+                gen.generate()
+            except EmptyModuleException as error:
+                print(error)
 
         self.generate_index()
 
     def generate_index(self):
-        self.modules = list(map(lambda m: SourceCodeModule(m), self.modules))
-
         index_html = self.j2_env.get_template("project.html").render({
-            "modules": self.modules,
+            "modules": self.modules_as_objects,
+            "project": self.base_path,
             "time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "version": CppDoc.VERSION,
-            "project": os.path.basename(os.path.dirname(self.project_dir_path + "/") + "/")
+            "version": CppDoc.VERSION
         })
 
-        with open(self.output_dir + "/index.html", "w") as f:
+        with open(self.output_path + "/index.html", "w") as f:
             f.write(index_html)

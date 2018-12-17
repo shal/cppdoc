@@ -4,40 +4,56 @@ import datetime
 
 from docgen.document_generator import DocumentGenerator
 from docgen.source_code import SourceCodeFile
-from docgen.base_generator import BaseGenerator
+from docgen.base_generator import BaseGenerator, path_normalizer
 from docgen.cppdoc import CppDoc
 
+class EmptyModuleException(Exception):
+    def __init__(self):
+        super(EmptyModuleException, self).__init__("This module does not contain .cpp files")
 
 class ModuleDocumentGenerator(BaseGenerator):
-    """Html documentation generator for folders with .cpp files"""
-    def __init__(self, output, module):
+    """HTML documentation generator for directories with .cpp files"""
+
+    @path_normalizer
+    def __init__(self, output, path):
         super(ModuleDocumentGenerator, self).__init__()
 
-        self.document_generators = list()
-        self.cpp_files = list()
+        self.output_path = output
+        self.path = path
 
-        self.output_dir = os.path.normpath(output)
-        self.module_dir_path = os.path.normpath(module)
+        self.__files = sorted(glob.glob(self.path + "/*.cpp"))
+
+    @property
+    def base_path(self):
+        return os.path.basename(self.path)
+
+    @property
+    def files_as_objects(self):
+        return list(map(lambda file: SourceCodeFile(file), self.__files))
 
     def generate(self):
-        self.cpp_files = sorted(glob.glob(self.module_dir_path + "/*.cpp"))
+        if len(self.__files) == 0:
+            raise EmptyModuleException
 
-        for cpp_file in self.cpp_files:
-            output_path_dir = self.output_dir + "/" + os.path.splitext(os.path.basename(cpp_file))[0]
-            gen = DocumentGenerator(output_path_dir, cpp_file)
-            gen.generate()
+        for file in self.__files:
+            output_path_dir = self.output_path + "/" + os.path.splitext(os.path.basename(file))[0]
+
+            gen = DocumentGenerator(output_path_dir, file)
+
+            try:
+                gen.generate()
+            except Exception as error:
+                print(error)
 
         self.generate_index()
 
     def generate_index(self):
-        files = list(map(lambda file: SourceCodeFile(file), self.cpp_files))
-
         index_html = self.j2_env.get_template("module.html").render({
-            "files": files,
             "time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "version": CppDoc.VERSION,
-            "module": os.path.basename(os.path.dirname(self.module_dir_path + "/") + "/")
+            "module": self.base_path,
+            "files": self.files_as_objects
         })
 
-        with open(self.output_dir + "/index.html", "w") as f:
+        with open(self.output_path + "/index.html", "w") as f:
             f.write(index_html)

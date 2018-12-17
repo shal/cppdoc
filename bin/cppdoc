@@ -30,3 +30,5 @@ elif args.project is not None:
 
     generator = ProjectDocumentGenerator(args.output, args.project)
     generator.generate()
+
+

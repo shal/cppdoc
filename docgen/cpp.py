@@ -4,8 +4,14 @@ import os
 from docgen.function import Function
 from docgen.helpers import Helper
 
+import code
+
+# TODO: All function parsing login will be here.
+class FunctionParser:
+    pass
+
 class Class:
-    """C++ class/structure representation."""
+    """C++ class/structure representation"""
 
     def __init__(self, name, path, line, body=None):
         self.name = name
@@ -21,8 +27,7 @@ class Class:
                 parser = BodyParser(self.body, self.path, self.name)
                 parser.parse()
             except Exception as error:
-                pass
-                # print(colored(error, 'red'))
+                print(error)
 
             self.__methods = parser.functions
             self.__classes = parser.classes
@@ -48,7 +53,7 @@ class BodyParser:
         self.__includes = list()
 
         self.index = int()
-        self.line = int()
+        self.line = 1
         self.number = int()
         self.start_line = int()
 
@@ -67,6 +72,14 @@ class BodyParser:
     @property
     def current_text(self) -> str:
         return self.snippet[self.index:]
+
+    @property
+    def next_text(self) -> str:
+        return self.snippet[self.index + 1:]
+
+    @property
+    def processed_text(self) -> str:
+        return self.snippet[:self.index]
 
     @property
     def current_symbol(self) -> str:
@@ -134,6 +147,7 @@ class BodyParser:
             elif ch == "{":
                 class_body = Helper.find_body(possible_struct_body[i:])
                 self.index += len(class_body)
+
                 self.line += len(class_body.split(os.linesep))
                 cpp_class = Class(struct_name, self.path, self.line, class_body)
                 break
@@ -144,8 +158,10 @@ class BodyParser:
         self.__classes.append(cpp_class)
 
     def process_class(self):
-        after_class = self.snippet[self.index + 5:].strip()
+        self.start_line = self.line
+        self.index += 5
 
+        after_class = self.current_text.strip()
         class_name = after_class.split()[0]
 
         # Avoid class names with characters, like "Example{" or "Example;".
@@ -154,17 +170,18 @@ class BodyParser:
 
         possible_class_body = self.snippet[self.index + 6 + len(class_name):]
 
-        self.index += 6 + len(class_name) + 1
+        self.index += len(class_name) + 1
 
         for i, ch in enumerate(possible_class_body):
             self.index += 1
+
             if ch == os.linesep:
                 self.line += 1
             elif ch == "{":
                 class_body = Helper.find_body(possible_class_body[i:])
                 self.index += len(class_body)
+                cpp_class = Class(class_name, self.path, self.start_line, class_body)
                 self.line += len(class_body.split(os.linesep))
-                cpp_class = Class(class_name, self.path, self.line, class_body)
                 break
             elif ch == ">" or ch == ";":
                 cpp_class = Class(class_name, self.path, self.line)
@@ -195,8 +212,6 @@ class BodyParser:
 
         self.index += len("#include")
 
-        # to_be_processed = self.current_text
-
         while self.index < len(self.snippet):
             if self.current_symbol == ">":
                 self.__includes.append(Helper.htmlize(self.snippet[start:self.index + 1]))
@@ -209,19 +224,101 @@ class BodyParser:
 
             self.index += 1
 
+        self.index += 1
 
+    def process_func(self):
+        if self.current_symbol == "(" and len(self.stack) == 0:
+            lexemes = re.split("[\s\n]", self.processed_text)
 
-        # for ch in self.snippet[start:]:
-        #     self.index += 1
-        #
-        #     if ch == ">":
-        #         self.__includes.append(Helper.htmlize(self.snippet[start:self.index]))
-        #         break
-        #     elif ch == "\"" and is_started:
-        #         self.__includes.append(self.snippet[start:self.index])
-        #         break
-        #     elif ch == "\"":
-        #         is_started = True
+            possible_func_name = lexemes[-1]
+            possible_func_type = lexemes[-2]
+
+            # Validate function name.
+            if not Helper.is_valid_identifier(possible_func_name):
+                self.stack.append(self.current_symbol)
+                self.index += 1
+                return
+
+            self.start_line = self.line
+
+            if self.is_constructor(possible_func_name):
+                self.body = possible_func_name + " ("
+
+            elif possible_func_type is not None:
+                # Validate function return type.
+                if not Helper.is_valid_type(possible_func_type):
+                    self.stack.append(self.current_symbol)
+                    self.index += 1
+                    return
+                self.body = possible_func_type + " " + possible_func_name + " ("
+
+            self.stack.append(self.current_symbol)
+            self.index += 1
+            return
+
+        if self.current_symbol == "(":
+            self.stack.append(self.current_symbol)
+            self.index += len("(")
+            return
+
+        if self.current_symbol == ")" and len(self.stack) > 0:
+            self.stack.pop()
+
+            if len(self.stack) > 0:
+                self.index += len(")")
+                return
+            else:
+                # Skip "(".
+                self.index += len(")")
+
+                while self.index < len(self.snippet):
+                    if self.current_symbol == os.linesep:
+                        self.line += 1
+                        self.index += 1
+                        continue
+
+                    if self.current_symbol == "{":
+                        method = Function(self.body.strip(), self.path, self.line, self.class_name)
+                        prev_line = self.snippet.split(os.linesep)[self.start_line - 2]
+                        if Helper.has_comment_entry(prev_line.strip()):
+                            method.comment = self.__comments[-1]
+
+                        self.__methods.append(method)
+
+                        self.body = ""
+
+                        # Skip function body. Count index and line.
+                        to_skip = Helper.find_body(self.current_text)
+                        self.index += len(to_skip)
+                        self.line += len(to_skip.split(os.linesep)) - 1
+                        return
+
+                    if self.current_symbol == ";":
+                        method = Function(self.body.strip(), self.path, self.line, self.class_name)
+                        prev_line = self.snippet.split(os.linesep)[self.start_line - 1]
+
+                        if Helper.has_comment_entry(prev_line.strip()):
+                            method.comment = self.__comments[-1]
+
+                        self.__methods.append(method)
+                        self.body = ""
+                        self.index += len(";")
+                        return
+
+                    if self.current_symbol == "}" or self.current_symbol == "#":
+                        self.body = ""
+                        self.index += 1
+                        return
+
+                    self.index += 1
+
+                return
+
+        if self.current_symbol == ")":
+            self.index += len(")")
+            return
+
+        self.index += 1
 
     def parse(self):
         while self.index < len(self.snippet):
@@ -241,11 +338,11 @@ class BodyParser:
                 continue
 
             if self.is_clang_comment:
-                if self.snippet[self.index] == os.linesep:
+                if self.is_new_line:
                     self.line += 1
                     self.comment += "<br>"
                 self.comment += self.current_symbol
-                self.index += len(os.linesep)
+                self.index += 1
                 continue
 
             # Comment.
@@ -280,12 +377,16 @@ class BodyParser:
             if self.current_text.startswith("template"):
                 self.index += 8
                 self.process_template()
+                continue
 
             # Macros.
             if self.current_text.startswith("#define"):
                 self.index += 6
                 self.process_macros()
                 continue
+            # elif self.current_text.startswith("#if"):
+            #     self.index += len("#if")
+            #     continue
 
             # Includes.
             if self.current_text.startswith("#include"):
@@ -312,58 +413,4 @@ class BodyParser:
                 self.index += 1
                 continue
 
-            if self.current_symbol == "(":
-
-                if len(self.stack) == 0:
-                    lexemes = re.split("\s", self.body)
-
-                    method_name = lexemes[-1]
-                    method_type = lexemes[-2]
-
-                    self.start_line = self.line
-
-                    if self.class_name is None and self.is_constructor(method_name[:-1]):
-                        self.body = method_name
-                    else:
-                        if method_type or re.match(r"(.*)::~?(\1)", method_name):
-                            self.body = method_type + " " + method_name
-                        else:
-                            self.index += 1
-
-                self.stack.append(self.current_symbol)
-            elif self.current_symbol == ")":
-                if len(self.stack) == 0:
-                    self.index += 1
-                    continue
-
-                self.stack.pop()
-
-                if len(self.stack) == 0:
-                    for ch in self.snippet[self.index + 1:]:
-                        self.index += 1
-                        if ch == os.linesep:
-                            self.line += 1
-                        elif ch == "{":
-                            method = Function(self.body.strip(), self.path, self.line, self.class_name)
-                            #
-                            prev_line = self.snippet.split(os.linesep)[self.start_line - 1]
-                            has_comment = Helper.has_comment_entry(prev_line.strip())
-                            if has_comment:
-                                method.comment = self.__comments[-1]
-                            #
-                            self.__methods.append(method)
-                            #
-                            self.body = ""
-
-                            # Skip function body. Count index and line.
-                            function_body = self.snippet[self.index:]
-                            to_skip = Helper.find_body(function_body)
-                            to_skip_chars = len(to_skip)
-                            to_skip_lines = len(to_skip.split(os.linesep))
-                            self.index += to_skip_chars
-                            self.line += to_skip_lines
-                            break
-                        elif ch == ";" or ch == "}" or ch == "#":
-                            self.body = ""
-                            break
-            self.index += 1
+            self.process_func()

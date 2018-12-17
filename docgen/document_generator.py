@@ -26,18 +26,18 @@ class DocumentGenerator(BaseGenerator):
         self.includes = list()
 
     def generate(self):
-        # try:
-        parser = cpp.BodyParser(self.file_content, self.file_path)
-        parser.parse()
+        try:
+            parser = cpp.BodyParser(self.file_content, self.file_path)
+            parser.parse()
 
-        self.classes = parser.classes
-        self.functions = parser.functions
-        self.includes = parser.includes
+            self.classes = parser.classes
+            self.functions = parser.functions
+            self.includes = parser.includes
 
-        self.generate_files()
-        # except Exception as error:
+            self.generate_files()
+        except Exception as error:
             # pass
-            # print(error)
+            print(error)
 
     def generate_structure(self):
         if not os.path.exists(self.output):
