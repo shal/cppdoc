@@ -2,14 +2,24 @@ import os
 import datetime
 import glob
 
-from docgen.base_generator import BaseGenerator
+from docgen.base_generator import BaseGenerator, path_normalizer
 from docgen.module_document_generator import ModuleDocumentGenerator, EmptyModuleException
 from docgen.cppdoc import CppDoc
 from docgen.source_code import SourceCodeModule
 
 
 class ProjectDocumentGenerator(BaseGenerator):
-    """HTML documentation generator for folder with folders with .cpp files"""
+    """HTML documentation generator for directory with modules"""
+
+    @path_normalizer
+    def __init__(self, output, path):
+        super(ProjectDocumentGenerator, self).__init__()
+
+        self.output_path = output
+        self.path = path
+
+        modules = list(map(lambda x: os.path.join(self.path, x), os.listdir(self.path)))
+        self.__modules = list(filter(lambda x: os.path.isdir(x), modules))
 
     @property
     def modules_with_cpp_files(self) -> list:
@@ -27,21 +37,9 @@ class ProjectDocumentGenerator(BaseGenerator):
     def modules_as_objects(self) -> list:
         return list(map(lambda m: SourceCodeModule(m), self.modules_with_cpp_files))
 
-    def __init__(self, output, project):
-        super(ProjectDocumentGenerator, self).__init__()
-
-        self.document_generators = list()
-        self.cpp_files = list()
-
-        self.output_dir = os.path.normpath(output)
-        self.path = os.path.normpath(project)
-
-        modules = list(map(lambda x: os.path.join(self.path, x), os.listdir(self.path)))
-        self.__modules = list(filter(lambda x: os.path.isdir(x), modules))
-
     def generate(self):
         for module_path in self.modules_with_cpp_files:
-            output_path_dir = self.output_dir + "/" + os.path.basename(module_path)
+            output_path_dir = self.output_path + "/" + os.path.basename(module_path)
 
             if not os.path.exists(output_path_dir):
                 os.makedirs(output_path_dir)
@@ -62,5 +60,5 @@ class ProjectDocumentGenerator(BaseGenerator):
             "version": CppDoc.VERSION
         })
 
-        with open(self.output_dir + "/index.html", "w") as f:
+        with open(self.output_path + "/index.html", "w") as f:
             f.write(index_html)

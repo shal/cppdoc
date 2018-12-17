@@ -4,7 +4,7 @@ import datetime
 
 from docgen.document_generator import DocumentGenerator
 from docgen.source_code import SourceCodeFile
-from docgen.base_generator import BaseGenerator
+from docgen.base_generator import BaseGenerator, path_normalizer
 from docgen.cppdoc import CppDoc
 
 class EmptyModuleException(Exception):
@@ -13,11 +13,13 @@ class EmptyModuleException(Exception):
 
 class ModuleDocumentGenerator(BaseGenerator):
     """HTML documentation generator for directories with .cpp files"""
-    def __init__(self, output, module):
+
+    @path_normalizer
+    def __init__(self, output, path):
         super(ModuleDocumentGenerator, self).__init__()
 
-        self.output_path = os.path.normpath(output)
-        self.path = os.path.normpath(module)
+        self.output_path = output
+        self.path = path
 
         self.__files = sorted(glob.glob(self.path + "/*.cpp"))
 
