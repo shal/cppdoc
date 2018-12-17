@@ -12,7 +12,7 @@ class ProjectDocumentGenerator(BaseGenerator):
 
     def __init__(self, output, project):
         super(ProjectDocumentGenerator, self).__init__()
-        
+
         self.document_generators = list()
         self.cpp_files = list()
         self.modules = list()

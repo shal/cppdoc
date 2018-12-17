@@ -21,8 +21,7 @@ class Class:
                 parser = BodyParser(self.body, self.path, self.name)
                 parser.parse()
             except Exception as error:
-                pass
-                # print(colored(error, 'red'))
+                print(error, 'red')
 
             self.__methods = parser.functions
             self.__classes = parser.classes
@@ -195,8 +194,6 @@ class BodyParser:
 
         self.index += len("#include")
 
-        # to_be_processed = self.current_text
-
         while self.index < len(self.snippet):
             if self.current_symbol == ">":
                 self.__includes.append(Helper.htmlize(self.snippet[start:self.index + 1]))
@@ -208,20 +205,6 @@ class BodyParser:
                 is_started = True
 
             self.index += 1
-
-
-
-        # for ch in self.snippet[start:]:
-        #     self.index += 1
-        #
-        #     if ch == ">":
-        #         self.__includes.append(Helper.htmlize(self.snippet[start:self.index]))
-        #         break
-        #     elif ch == "\"" and is_started:
-        #         self.__includes.append(self.snippet[start:self.index])
-        #         break
-        #     elif ch == "\"":
-        #         is_started = True
 
     def parse(self):
         while self.index < len(self.snippet):
