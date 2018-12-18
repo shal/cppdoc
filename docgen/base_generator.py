@@ -2,6 +2,7 @@ from jinja2 import Environment, FileSystemLoader
 
 import os
 
+
 def path_normalizer(func):
     def wrapper(self, output, path):
         norm_output = os.path.normpath(output)
@@ -10,8 +11,9 @@ def path_normalizer(func):
 
     return wrapper
 
+
 class BaseGenerator:
-    """Base Class for html document generation"""
+    """HTML documentation generator"""
     def __init__(self):
         self.j2_env = Environment(
             loader=FileSystemLoader("templates"),

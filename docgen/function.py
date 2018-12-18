@@ -1,34 +1,34 @@
 import os
 
-
-class Comment(object):
-    """C++ comment representation"""
-    def __init__(self, comment=None):
-        if comment is None:
-            self.__comment = ""
-        else:
-            self.__comment = comment
-
-    def __get__(self, instance, owner):
-        return self.__comment
-
-    def __set__(self, instance, value):
-        self.__comment = value
-
-    def __delete__(self, instance):
-        del self.__comment
+# class Comment(object):
+#     """C++ comment representation"""
+#     def __init__(self, comment=None):
+#         if comment is None:
+#             self.__comment = ""
+#         else:
+#             self.__comment = comment
+#
+#     def __get__(self, instance, owner):
+#         return self.__comment
+#
+#     def __set__(self, instance, value):
+#         self.__comment = value
+#
+#     def __delete__(self, instance):
+#         del self.__comment
 
 
 class Function:
     """C++ function representation"""
 
-    comment = Comment()
+    # comment = Comment()
 
     def __init__(self, query, path, line, class_name=None):
         self.__path = os.path.basename(path)
 
         self.line = line
         self.class_name = class_name
+        self.comment = str()
 
         parts = query.split("(", 1)  # 1 - Max split.
         type_name = parts[0].split()
