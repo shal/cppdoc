@@ -1,6 +1,18 @@
-# cppdoc
+[license]: ./LICENSE
 
-> Command Line Tool for documentation generation.
+# CppDoc
+
+> :open_book: Powerful tool for analyzing C++ code and docs generation
+
+Generates full documentation with list of all C++ entities in the code.
+
+Supported entities:
+
+- [x] Class
+- [x] Structs
+- [x] Include
+- [x] Templates
+- [x] Functions
 
 # Usage
 
@@ -16,6 +28,7 @@ Optional arguments:
                         Path to project.
   --output OUTPUT, -o OUTPUT
                         Output result.
+  --version             show programs version number and exit.
 ```
 
 Generate documentation for **file**.
@@ -35,3 +48,7 @@ Generate documentation for **project**.
 ```sh
 $> ./bin/cppdoc --project=<PROJECT> --output=<OUTPUT>
 ```
+
+# License
+
+Project released under the terms of the MIT [license][license].
