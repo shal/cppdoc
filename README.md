@@ -2,10 +2,6 @@
 
 > Command Line Tool for documentation generation.
 
-# Demo
-
-![Demo](./resources/demo.gif)
-
 # Usage
 
 ```sh
